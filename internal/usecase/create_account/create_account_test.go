@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com.br/JoaoLeonello/wallet-core/internal/entity"
+	"github.com.br/JoaoLeonello/wallet-core/internal/usecase/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -37,20 +38,21 @@ func (m *AccountGatewayMock) FindByID(id string) (*entity.Account, error) {
 }
 
 func TestCreateAccountUseCase_Execute(t *testing.T) {
-	client, _ := entity.NewClient("John Doe", "j@j.com")
-	clientMock := &ClientGatewayMock{}
+	client, _ := entity.NewClient("John Doe", "j@j")
+	clientMock := &mocks.ClientGatewayMock{}
 	clientMock.On("Get", client.ID).Return(client, nil)
 
-	accountMock := &AccountGatewayMock{}
+	accountMock := &mocks.AccountGatewayMock{}
 	accountMock.On("Save", mock.Anything).Return(nil)
 
 	uc := NewCreateAccountUseCase(accountMock, clientMock)
-	inputDTO := CreateAccountInputDTO{
+	inputDto := CreateAccountInputDTO{
 		ClientID: client.ID,
 	}
-	output, err := uc.Execute(inputDTO)
+	output, err := uc.Execute(inputDto)
 	assert.Nil(t, err)
 	assert.NotNil(t, output.ID)
+	// asssert valid uuid
 	clientMock.AssertExpectations(t)
 	accountMock.AssertExpectations(t)
 	clientMock.AssertNumberOfCalls(t, "Get", 1)
