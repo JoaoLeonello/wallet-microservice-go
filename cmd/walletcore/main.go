@@ -7,13 +7,16 @@ import (
 
 	"github.com.br/JoaoLeonello/wallet-core/internal/database"
 	"github.com.br/JoaoLeonello/wallet-core/internal/event"
+	"github.com.br/JoaoLeonello/wallet-core/internal/event/handler"
 	"github.com.br/JoaoLeonello/wallet-core/internal/usecase/create_account"
 	"github.com.br/JoaoLeonello/wallet-core/internal/usecase/create_client"
 	"github.com.br/JoaoLeonello/wallet-core/internal/usecase/create_transaction"
 	"github.com.br/JoaoLeonello/wallet-core/internal/web"
 	"github.com.br/JoaoLeonello/wallet-core/internal/web/webserver"
 	"github.com.br/JoaoLeonello/wallet-core/pkg/events"
+	"github.com.br/JoaoLeonello/wallet-core/pkg/kafka"
 	"github.com.br/JoaoLeonello/wallet-core/pkg/uow"
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 func main() {
@@ -23,9 +26,16 @@ func main() {
 	}
 	defer db.Close()
 
+	configMap := ckafka.ConfigMap{
+		"bootstrap.servers": "kafka:29092",
+		"group.id":          "wallet",
+	}
+	kafkaProducer := kafka.NewKafkaProducer(&configMap)
+
 	eventDispatcher := events.NewEventDispatcher()
+	eventDispatcher.Register("TransactionCreated", handler.NewTransactionCreatedKafkaHandler(kafkaProducer))
 	transactionCreatedEvent := event.NewTransactionCreated()
-	// balanceUpdatedEvent := event.NewBalanceUpdated()
+	balanceUpdatedEvent := event.NewBalanceUpdated()
 
 	clientDb := database.NewClientDB(db)
 	accountDb := database.NewAccountDB(db)
@@ -43,7 +53,7 @@ func main() {
 
 	createClientUseCase := create_client.NewCreateClientUseCase(clientDb)
 	createAccountUseCase := create_account.NewCreateAccountUseCase(accountDb, clientDb)
-	createTransactionUseCase := create_transaction.NewCreateTransactionUseCase(uow, eventDispatcher, transactionCreatedEvent)
+	createTransactionUseCase := create_transaction.NewCreateTransactionUseCase(uow, eventDispatcher, transactionCreatedEvent, balanceUpdatedEvent)
 
 	webserver := webserver.NewWebServer(":3000")
 

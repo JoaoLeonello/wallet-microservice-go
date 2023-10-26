@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com.br/JoaoLeonello/wallet-core/internal/entity"
+	"github.com.br/JoaoLeonello/wallet-core/internal/event"
 	"github.com.br/JoaoLeonello/wallet-core/internal/usecase/mocks"
 	"github.com.br/JoaoLeonello/wallet-core/pkg/events"
 	"github.com/stretchr/testify/assert"
