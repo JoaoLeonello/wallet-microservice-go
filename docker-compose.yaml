@@ -1,12 +1,23 @@
 version: '3'
 
 services:
+  springapp:
+    build: 
+      context: .
+      dockerfile: Dockerfile.springboot
+    ports: 
+      - 3003:3003
+    volumes:
+      - ./javaapp:/app
+
   goapp:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.goapp 
     ports: 
       - 8080:8080
     volumes:
-      - .:/app
+      - ./goapp:/app
 
   mysql:
     image: mysql:5.7
